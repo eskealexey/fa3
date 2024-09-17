@@ -4,3 +4,7 @@ class CreateUser(BaseModel):
     username: str
     password: str
     status: int
+
+class UpdateUser(BaseModel):
+    password: str
+    status: int
