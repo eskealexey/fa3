@@ -1,6 +1,17 @@
 from pydantic import BaseModel
 
-class CreateTransistors(BaseModel):
+class CreateTransistor(BaseModel):
+    name: str
+    markname: str
+    type_: int
+    korpus: int
+    descr: str
+    amount: int
+    path_file: str
+    # userid: int
+
+
+class UpdateTransistor(BaseModel):
     name: str
     markname: str
     type_: int
@@ -12,7 +23,7 @@ class CreateTransistors(BaseModel):
 
 
 class CreateType(BaseModel):
-    type_: str
+    type_name: str
 
 
 class CreateKorpus(BaseModel):

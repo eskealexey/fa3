@@ -1,0 +1,33 @@
+{% extends 'index_template.html' %}}
+
+{% block content %}
+    <h3>Новый пользователь</h3>
+ <section >
+     {{ message }}
+    <form action="create" method="post">
+        <p><label for="username">Имя Пользователя:</label>
+            <input type="text" name="username" maxlength="25" id="username" placeholder="имя">
+        </p>
+         <p><label for="pass1">Пароль:</label>
+            <input type="password" name="pass1" maxlength="25" id="пароль">
+        </p>
+        <p><label for="pass2">Повторите пароль:</label>
+            <input type="text" name="pass2" maxlength="25" id="повторте пароль">
+        </p>
+
+
+
+        <p><input type="submit" value="Регистрация"></p>
+    </form>
+
+
+
+</section>
+{% endblock %}
+
+
+{% block left %}
+    <aside class="left">
+    </aside>
+
+{% endblock %}
