@@ -1,19 +1,16 @@
-from fastapi import APIRouter, Depends, status, HTTPException, Request, Form, Body
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, status, HTTPException, Request, Form, Response
+from sqlalchemy import insert, select, delete
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from starlette.responses import JSONResponse
 from starlette.templating import Jinja2Templates
 from typing_extensions import Annotated
+
 from app.backend.db import get_db
-
-from sqlalchemy import insert, select, update, delete
-
+from app.models.transistor_mod import UserOrm
 # from app.main import templates
 # from app.main import templates
 from app.repository.user_repo import update_user_db
-from app.models.transistor_mod import UserOrm
-from app.schemas.users_shem import CreateUser, UpdateUser
+from app.schemas.users_shem import UpdateUser
 
 router = APIRouter(
     prefix="/users",
@@ -100,18 +97,31 @@ async def logw(request: Request):
 @router.post("/login")
 async def log_in(
         request: Request,
+        # response: Response,
         db: Annotated[Session, Depends(get_db)],
-        username=Form(...),
-        pass1=Form(...),
+        username=Form(),
+        pass1=Form(),
 ):
-    try:
-        query = select(UserOrm).where(UserOrm.username == username)
-        result = db.execute(query)
-        user = result.scalars().all()
-        if UserOrm(user).password == pass1:
-            print("URA")
+    query = select(UserOrm).where(UserOrm.username == username)
+    result = db.execute(query)
+    users = result.scalars().all()
+    if len(users) > 0:
+        for user in users:
+            user_dict = vars(user)
+        userid = user_dict['id']
+        u_name = user_dict['username']
+        password = user_dict['password']
+        status = user_dict['status']
+        if password == pass1:
+            response = templates.TemplateResponse("main.html", {"request": request, "title": "Главная"})
+            response.set_cookie(key="user_id", value=userid, expires=None, path="/")
+            response.set_cookie(key="user_name", value=u_name, expires=None, path="/")
+            return response
+            # return {'id': userid, "username": u_name, "pass": password, 'status': status}
         else:
-            print('DIRA')
-    except:
-        return JSONResponse(status_code=404, content={"message": "Пользователь не найден"})
-    return {'request': request, "username": user, "pass": pass1}
+            return {'message': 'Неверный пароль'}
+
+
+    else:
+        return {'message': 'Такого пользователя нет в базе'}
+

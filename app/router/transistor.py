@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request, Form, Cookie
 from sqlalchemy import select, insert, update, delete
 from sqlalchemy.orm import Session
 from starlette import status
+from starlette.templating import Jinja2Templates
 from typing_extensions import Annotated
 
 from app.backend.db import get_db
@@ -13,35 +14,64 @@ router = APIRouter(
     prefix="/transistors",
     tags=["transistors"]
 )
-
+templates = Jinja2Templates(directory="app/templates")
 
 # ==========================full list transistos============================
-@router.get("/fulllist")
-async def get_all(db: Annotated[Session, Depends(get_db)]):
+@router.get("/")
+async def get_all(request: Request, db: Annotated[Session, Depends(get_db)]):
     query = select(TransistorOrm)
     result = db.execute(query)
     transistors = result.scalars().all()
-    return transistors
+    return templates.TemplateResponse("transistor.html", {"request": request, "title": "Главная", "transistors": transistors})
+
+
+@router.get("/create")
+async def form_add_transistor(request: Request):
+
+    return templates.TemplateResponse("transistor_forma_add.html",
+                                      {"request": request, "title": "Добавление транзистора", "transistors": "transistors"})
 
 
 # ==========================Create transistos============================
-@router.post("/create")
-async def add_transistor(db: Annotated[Session, Depends(get_db)], create_transistor: CreateTransistor):
-    db.execute(insert(TransistorOrm).values(
-        name=create_transistor.name,
-        markname=create_transistor.markname,
-        type_=create_transistor.type_,
-        korpus=create_transistor.korpus,
-        descr=create_transistor.descr,
-        amount=create_transistor.amount,
-        path_file=create_transistor.path_file
-        # userid: int
-
-    ))
-    db.commit()
+@router.post("/create1")
+async def add_transistor(
+        request:Request,
+        db: Annotated[Session, Depends(get_db)],
+        create_transistor: CreateTransistor,
+        name=Annotated[str, Form(...)],
+        markname=Annotated[str, Form(...)],
+        type_=Annotated[int, Form(...)],
+        korpus = Annotated[int, Form(...)],
+        descr = Annotated[str, Form(...)],
+        path_file = Annotated[str, Form(...)],
+        user_id : Annotated[str, Cookie()] = None,
+        user_name : Annotated[str, Cookie()] = None,
+):
+    # db.execute(insert(TransistorOrm).values(
+    #     name=name,
+    #     markname=markname,
+    #     type_=type_,
+    #     korpus=korpus,
+    #     descr=descr,
+    #     amount=0,
+    #     path_file=path_file,
+    #     userid=user_id,
+    # ))
+    # db.execute(insert(TransistorOrm).values(
+    #     name=create_transistor.name,
+    #     markname=create_transistor.markname,
+    #     type_=create_transistor.type_,
+    #     korpus=create_transistor.korpus,
+    #     descr=create_transistor.descr,
+    #     amount=create_transistor.amount,
+    #     path_file=create_transistor.path_file
+    #     # userid: int
+    # ))
+    # db.commit()
+    print(user_id, user_name, name)
     return {
-        'status_kod': status.HTTP_201_CREATED,
-        'type_': 'Successful',
+        'request': request,
+        'user_id': user_id,
     }
 
 
