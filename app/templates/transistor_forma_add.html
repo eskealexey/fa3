@@ -4,8 +4,7 @@
 <h3>{{ title }}</h3>
 
 <section>
-
-   <form method="post" action="/transistors/create1" enctype="multipart/form-data">
+   <form method="post" action="add_tr" enctype="multipart/form-data">
        <p>
            <label for="name">Наименование:</label><br>
            <input type="text" name="name" id="name" maxlength="20">
@@ -16,19 +15,27 @@
        </p>
        <p>
            <label for="type_">Тип транзистора:</label><br>
-           <input type="text" name="type_" id="type_" maxlength="20">
+           <select id="type_" name="type_">
+               {% for t in types%}
+                <option value="{{t.id}}">{{t.type_name}}</option>
+               {% endfor %}
+           </select>
        </p>
        <p>
            <label for="korpus">Корпус:</label><br>
-           <input type="text" name="korpus" id="korpus" maxlength="20">
+           <select id="korpus" name="korpus">
+               {% for k in korpus%}
+                <option value="{{k.id}}">{{k.korpus_name}}</option>
+               {% endfor %}
+           </select>
        </p>
        <p>
            <label for="descr">Краткое описание:</label><br>
-           <textarea name="descr" id="descr" cols="50" rows="10"></textarea>
+           <textarea name="descr" id="descr" cols="50" rows="10"> </textarea>
        </p>
+
        <p>
-           <label for="path_file">Путь к DataSheet:</label><br>
-           <input type="file" name="path_file" id="path_file" maxlength="20">
+          <input type="hidden" name="user_id" id="user_id" value="{{user_id}}" >
        </p>
 
      <p>
@@ -36,6 +43,5 @@
      </p>
 
    </form>
-
 </section>
 {% endblock %}

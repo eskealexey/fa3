@@ -8,7 +8,10 @@ class CreateTransistor(BaseModel):
     descr: str
     amount: int
     path_file: str
-    # userid: int
+    userid: int
+
+    def __str__(self):
+        return self.markname
 
 
 class UpdateTransistor(BaseModel):

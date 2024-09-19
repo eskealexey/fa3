@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Form, Cookie
 from sqlalchemy import select, insert, update, delete
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from starlette import status
+from starlette.responses import FileResponse
 from starlette.templating import Jinja2Templates
 from typing_extensions import Annotated
 
@@ -16,63 +18,123 @@ router = APIRouter(
 )
 templates = Jinja2Templates(directory="app/templates")
 
+
 # ==========================full list transistos============================
 @router.get("/")
-async def get_all(request: Request, db: Annotated[Session, Depends(get_db)]):
-    query = select(TransistorOrm)
-    result = db.execute(query)
-    transistors = result.scalars().all()
-    return templates.TemplateResponse("transistor.html", {"request": request, "title": "Главная", "transistors": transistors})
+async def get_all(request: Request, db: Annotated[Session, Depends(get_db)], user_id=Cookie(default=None)):
+    if user_id != None:
+        query = select(TransistorOrm).where(TransistorOrm.userid == user_id)
+        result = db.execute(query)
+        transistors = result.scalars().all()
+        if len(transistors) > 0:
+            return templates.TemplateResponse("transistor.html",
+                                              {"request": request, "title": "Транзисторы", "transistors": transistors})
+    else:
+        return {'massage': "Необходимо авторизоваться"}
 
 
+# ==========================страница с формой для добавления транзистора============================
 @router.get("/create")
-async def form_add_transistor(request: Request):
+async def form_add_transistor(
+        request: Request,
+        db: Annotated[Session, Depends(get_db)],
+        user_id=Cookie(),
+        user_name=Cookie(),
 
-    return templates.TemplateResponse("transistor_forma_add.html",
-                                      {"request": request, "title": "Добавление транзистора", "transistors": "transistors"})
+):
+    q_type_ = select(TypeOrm)
+    r_type = db.execute(q_type_)
+    types = r_type.scalars().all()
+
+    q_korpus = select(KorpusOrm)
+    r_korpus = db.execute(q_korpus)
+    korpus = r_korpus.scalars().all()
+
+    return templates.TemplateResponse(
+        "transistor_forma_add.html",
+        {"request": request,
+         "title": "Добавление транзистора",
+         "types": types,
+         "korpus": korpus,
+         "user_id": user_id,
+         "user_name": user_name, }
+    )
+
+
+# ==========================вывод транзистора============================
+@router.get("/{trid}")
+async def get_transistor(
+        request: Request,
+        trid: int,
+        db: Annotated[Session, Depends(get_db)],
+):
+    query = select(TransistorOrm).where(TransistorOrm.id == trid)
+    result = db.execute(query)
+    transistor = result.scalars().one()
+    if transistor is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ошибка обновления данных"
+        )
+    else:
+        q_type = select(TypeOrm.type_name).where(TypeOrm.id == transistor.type_)
+        r_type = db.execute(q_type)
+        types = r_type.scalars().one()
+
+        q_korpus = select(KorpusOrm.korpus_name).where(KorpusOrm.id == transistor.korpus)
+        r_korpus = db.execute(q_korpus)
+        korpus = r_korpus.scalars().one()
+
+        return templates.TemplateResponse(
+            "transistor_id.html",
+            {
+                "request": request,
+                "title": "Транзистор",
+                "transistor": transistor,
+                "types": types,
+                "korpus": korpus,
+            })
 
 
 # ==========================Create transistos============================
-@router.post("/create1")
+@router.post("/add_tr")
 async def add_transistor(
-        request:Request,
+        request: Request,
         db: Annotated[Session, Depends(get_db)],
-        create_transistor: CreateTransistor,
-        name=Annotated[str, Form(...)],
-        markname=Annotated[str, Form(...)],
-        type_=Annotated[int, Form(...)],
-        korpus = Annotated[int, Form(...)],
-        descr = Annotated[str, Form(...)],
-        path_file = Annotated[str, Form(...)],
-        user_id : Annotated[str, Cookie()] = None,
-        user_name : Annotated[str, Cookie()] = None,
+        name=Form(title="name"),
+        markname=Form(),
+        type_=Form(),
+        korpus=Form(),
+        descr=Form(),
+        # path_file = Form(),
+        user_id=Form(),
 ):
-    # db.execute(insert(TransistorOrm).values(
-    #     name=name,
-    #     markname=markname,
-    #     type_=type_,
-    #     korpus=korpus,
-    #     descr=descr,
-    #     amount=0,
-    #     path_file=path_file,
-    #     userid=user_id,
-    # ))
-    # db.execute(insert(TransistorOrm).values(
-    #     name=create_transistor.name,
-    #     markname=create_transistor.markname,
-    #     type_=create_transistor.type_,
-    #     korpus=create_transistor.korpus,
-    #     descr=create_transistor.descr,
-    #     amount=create_transistor.amount,
-    #     path_file=create_transistor.path_file
-    #     # userid: int
-    # ))
-    # db.commit()
-    print(user_id, user_name, name)
-    return {
-        'request': request,
-        'user_id': user_id,
-    }
+    user_name = Cookie()
+    try:
+        db.execute(insert(TransistorOrm).values(
+            name=name,
+            markname=markname,
+            type_=type_,
+            korpus=korpus,
+            descr=descr,
+            amount=0,
+            path_file='',
+            userid=user_id,
+        ))
+        db.commit()
+        query = select(TransistorOrm).where(TransistorOrm.userid == user_id)
+        result = db.execute(query)
+        transistors = result.scalars().all()
+
+        return templates.TemplateResponse("transistor.html",
+                                          {"request": request, "title": "Транзисторы", "transistors": transistors,
+                                           "user_id": user_id})
+    except HTTPException as e:
+        print(e)
+        return templates.TemplateResponse(
+            "transistor_forma_add.html",
+            {"request": request, "title": "Добавление транзистора", 'message': 'Такой пользователь зарегистрирован'}
+        )
 
 
 # ==========================Update transistor===========================
@@ -87,6 +149,80 @@ async def update_user(
             detail="Ошибка обновления данных"
         )
     return transistor
+
+
+# =====================Добавть количество деталей =====================
+@router.post("/{trid}")
+async def add_amount(
+        request: Request,
+        db: Annotated[Session, Depends(get_db)],
+        trid: int,
+        act=Form(default=None),
+        quantity=Form(default=0),
+):
+    query = select(TransistorOrm.amount).where(TransistorOrm.id == trid)
+    result = db.execute(query)
+    total = int(result.scalars().one())
+
+    if act is not None:
+        if act == 'add':
+            total += int(quantity)
+        elif (act == 'del') and (total >= quantity):
+            total -= int(quantity)
+        else:
+            error = 'удаляется больше чем есть'
+
+
+
+    else:
+        error = 'не выбрано действие'
+
+
+    # if (request.POST):
+    #     error = ''
+    #     data_dict = request.POST.dict()
+    #     act = data_dict.get('act')
+    #     quantity = data_dict.get('quantity ')
+    #     try:
+    #         quantity = abs(int(quantity))
+    #         total = data.amount
+    #         print(total)
+    #         if act is not None:
+    #             if act == 'add':
+    #                 total += quantity
+    #             elif (act == 'del') and (total >= quantity):
+    #                 total -= quantity
+    #             else:
+    #                 error = 'удаляется больше чем есть'
+    #
+    #             data.amount = total
+    #             data.save(update_fields=['amount'])
+    #         else:
+    #             error = 'не выбрано действие'
+    #
+    #         context = {
+    #             'title': 'Транзистор',
+    #             'data': data,
+    #             'error': error,
+    #         }
+    #     except Exception as err:
+    #         print(err)
+    #         error = 'не число'
+    #         context = {
+    #             'title': 'Транзистор',
+    #             'data': data,
+    #             'error': error,
+    #         }
+    #     return render(request, 'app/transistor_id.html', context=context)
+    # else:
+    #     context = {
+    #         'title': 'Транзистор',
+    #         'data': data,
+    #         'error': '',
+    #     }
+    #     return render(request, 'app/transistor_id.html', context=context)
+
+    pass
 
 
 # ===========================full list types============================
@@ -131,3 +267,10 @@ async def add_korpus(db: Annotated[Session, Depends(get_db)], create_korpus: Cre
         'status_kod': status.HTTP_201_CREATED,
         'korpus': 'Successful',
     }
+
+
+@router.delete("/delete")
+async def delete_users(db: Annotated[Session, Depends(get_db)]):
+    db.execute(delete(TransistorOrm))
+    db.commit()
+    return {'message': 'Delete All'}

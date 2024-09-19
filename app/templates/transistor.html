@@ -23,7 +23,7 @@
     {% for tr in transistors %}
     <tr>
         <td>
-            <a href="/transistor/{{ tr.id }}/"> {{ tr.name }} </a>
+            <a href="/transistors/{{ tr.id }}/"> {{ tr.name }} </a>
         </td>
         <td>
         {{ tr.markname }}
@@ -44,6 +44,7 @@
         {% else %}
             <p>
                 <span class="fst-italic text-info">отсутствует</span>
+                <span>{{tr.userid}}</span>
             </p>
         {% endif %}
 
