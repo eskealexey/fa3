@@ -95,6 +95,44 @@ async def get_transistor(
             })
 
 
+#========================форма редактировани транзистора=================
+@router.get("/edit/{trid}")
+async def edit_transistor(
+        request: Request,
+        db: Annotated[Session, Depends(get_db)],
+        trid: int,
+        user_id = Cookie()
+):
+
+    query = select(TransistorOrm).where(TransistorOrm.id == trid)
+    result = db.execute(query)
+    transistor = result.scalars().one()
+    if transistor is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ошибка обновления данных"
+        )
+    else:
+        q_type = select(TypeOrm)
+        r_type = db.execute(q_type)
+        types = r_type.scalars().all()
+
+        q_korpus = select(KorpusOrm)
+        r_korpus = db.execute(q_korpus)
+        korpus = r_korpus.scalars().all()
+        return templates.TemplateResponse(
+            "transistor_edit.html",
+            {
+                "request": request,
+                "title": "Транзистор",
+                "transistor": transistor,
+                "types": types,
+                "korpus": korpus,
+                "user_id": user_id,
+            })
+
+
+
 # ==========================Create transistos============================
 @router.post("/add_tr")
 async def add_transistor(
@@ -137,9 +175,9 @@ async def add_transistor(
 
 
 # ==========================Update transistor===========================
-@router.put("/update/{trid}")
-async def update_user(
-        db: Annotated[Session, Depends(get_db)], update_transistor: UpdateTransistor, trid: int
+@router.post("/update/{trid}")
+async def update_transistr(
+        db: Annotated[Session, Depends(get_db)], update_transistor: UpdateTransistor, trid=int
 ):
     transistor = await update_transistor_db(db=db, update_transistor=update_transistor, trid=trid)
     if transistor is None:

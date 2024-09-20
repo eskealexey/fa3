@@ -21,7 +21,7 @@ class UpdateTransistor(BaseModel):
     korpus: int
     descr: str
     amount: int
-    path_file: str
+    # path_file: str
     userid: int
 
 
