@@ -12,7 +12,7 @@ app = FastAPI()
 
 
 @app.get("/")
-async def home(request: Request, user_name : Annotated[str, Cookie()] = None):
+async def home(request: Request, user_name: Annotated[str, Cookie()] = None):
     print(user_name)
     return templates.TemplateResponse("main.html", {"request": request, "title": "Главная", "user_name": user_name})
 
