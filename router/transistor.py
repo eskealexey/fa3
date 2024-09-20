@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Form, Cookie
-from sqlalchemy import select, insert, delete
+from sqlalchemy import select, insert, delete, update
 from sqlalchemy.orm import Session
 from starlette import status
 from starlette.responses import JSONResponse
@@ -175,17 +175,46 @@ async def add_transistor(
 
 
 # ==========================Update transistor===========================
+# @router.put("/update/{trid}")
+# async def update_transistr(
+#         db: Annotated[Session, Depends(get_db)], update_transistor: UpdateTransistor, trid=int
+# ):
+#     transistor = await update_transistor_db(db=db, update_transistor=update_transistor, trid=trid)
+#     if transistor is None:
+#         raise HTTPException(
+#             status_code=status.HTTP_400_BAD_REQUEST,
+#             detail="Ошибка обновления данных"
+#         )
+#     return transistor
+
 @router.post("/update/{trid}")
 async def update_transistr(
-        db: Annotated[Session, Depends(get_db)], update_transistor: UpdateTransistor, trid=int
+        # request: Request,
+        db: Annotated[Session, Depends(get_db)],
+        # update_transistor: UpdateTransistor,
+        trid=int,
+        name = Form(),
+        markname = Form(),
+        type_ = Form(),
+        korpus = Form(),
+        descr = Form()
 ):
-    transistor = await update_transistor_db(db=db, update_transistor=update_transistor, trid=trid)
-    if transistor is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Ошибка обновления данных"
-        )
-    return transistor
+
+    query = update(TransistorOrm).values(
+         name=name,
+         markname=markname,
+         type_=type_,
+         korpus=korpus,
+         descr=descr
+     ).where(TransistorOrm.id == trid)
+    db.execute(query)
+    db.commit()
+
+
+
+    return {
+        'request': 'request',
+    }
 
 
 # =====================Добавть количество деталей =====================

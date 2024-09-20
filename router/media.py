@@ -16,9 +16,9 @@ router = APIRouter(
 )
 templates = Jinja2Templates(directory="templates")
 #=============================загрузить Даташит=======================================
-@router.post("/")
+@router.put("/")
 async def datasheet(
-        # request: Request,
+        request: Request,
         trid: int,
         db: Annotated[Session, Depends(get_db)],
         upload_file: UploadFile = File(),
@@ -27,7 +27,8 @@ async def datasheet(
     try:
         upload_file.filename = upload_file.filename.lower()
 
-        path = f'public/media/{upload_file.filename}'
+        # path = f'public/media/{upload_file.filename}'
+        path = f'media/{upload_file.filename}'
 
         query = select(TransistorOrm).where(TransistorOrm.id == trid)
         result = db.execute(query)
@@ -40,7 +41,7 @@ async def datasheet(
 
         return {
             "trid": trid,
-            # "request": request,
+            "request": request,
             "file": upload_file,
             "filename": path,
             "type": upload_file.content_type,

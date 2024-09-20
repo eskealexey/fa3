@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request, Cookie
 
 from fastapi.templating import Jinja2Templates
-# from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from typing_extensions import Annotated
 from fastapi.staticfiles import StaticFiles
 from router.transistor import router as trans_router
@@ -16,6 +16,9 @@ async def home(request: Request, user_name: Annotated[str, Cookie()] = None):
     print(user_name)
     return templates.TemplateResponse("main.html", {"request": request, "title": "Главная", "user_name": user_name})
 
+BASE_DIR = Path(__file__).resolve().parent
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "public/media"
 
 app.include_router(userrouter)
 app.include_router(trans_router)
@@ -23,3 +26,4 @@ app.include_router(mediarouter)
 
 templates = Jinja2Templates(directory="templates")
 app.mount('/static', StaticFiles(directory="public"))
+app.mount('/media', StaticFiles(directory='public/media'), name='media')
