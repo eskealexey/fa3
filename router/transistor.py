@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, Form, Cookie
+import shutil
+
+from fastapi import APIRouter, Depends, HTTPException, Request, Form, Cookie, Response
+
 from sqlalchemy import select, insert, delete, update
 from sqlalchemy.orm import Session
 from starlette import status
@@ -6,7 +9,9 @@ from starlette.responses import JSONResponse
 from starlette.templating import Jinja2Templates
 from typing_extensions import Annotated
 from backend.db import get_db
-
+from fastapi import File, UploadFile, Form
+from main import *
+# from main import MEDIA_ROOT
 from models.transistor_mod import TransistorOrm, TypeOrm, KorpusOrm
 from repository.transistor_repo import update_transistor_db
 from schemas.transistors_shem import CreateType, CreateKorpus, UpdateTransistor
@@ -20,7 +25,7 @@ templates = Jinja2Templates(directory="templates")
 
 # ==========================full list transistos============================
 @router.get("/")
-async def get_all(request: Request, db: Annotated[Session, Depends(get_db)], user_id=Cookie(default=None)):
+async def get_all(request: Request, db: Annotated[Session, Depends(get_db)], user_id=Cookie(default=None), user_name=Cookie(),):
     if user_id != None:
         query = select(TransistorOrm).where(TransistorOrm.userid == user_id)
         result = db.execute(query)
@@ -187,9 +192,9 @@ async def add_transistor(
 #         )
 #     return transistor
 
-@router.post("/update/{trid}")
+@router.post("/edit")
 async def update_transistr(
-        # request: Request,
+        request: Request,
         db: Annotated[Session, Depends(get_db)],
         # update_transistor: UpdateTransistor,
         trid=int,
@@ -199,25 +204,31 @@ async def update_transistr(
         korpus = Form(),
         descr = Form()
 ):
-
-    query = update(TransistorOrm).values(
-         name=name,
-         markname=markname,
-         type_=type_,
-         korpus=korpus,
-         descr=descr
-     ).where(TransistorOrm.id == trid)
-    db.execute(query)
-    db.commit()
-
-
-
-    return {
-        'request': 'request',
-    }
+    if request.method == 'POST':
+        query = update(TransistorOrm).values(
+             name=name,
+             markname=markname,
+             type_=type_,
+             korpus=korpus,
+             descr=descr
+         ).where(TransistorOrm.id == trid)
+        db.execute(query)
+        db.commit()
+        return templates.TemplateResponse("transistor_id.html",
+                                          {"request": request, "title": "Транзисторы",
+                                           "trid": trid}, )
 
 
-# =====================Добавть количество деталей =====================
+    return templates.TemplateResponse("transistor_id.html",
+                                          {"request": request, "title": "Транзисторы",
+                                           "trid": trid}, )
+
+    #     {
+    #     'request': 'request',
+    # }
+
+
+# =====================Добавить количество деталей =====================
 @router.post("/{trid}")
 async def add_amount(
         request: Request,
@@ -254,6 +265,51 @@ async def add_amount(
     return  templates.TemplateResponse("transistor_id.html",
                                           {"request": request, "title": "Транзисторы", "transistor": transistor,
                                            "trid": trid},)
+
+#=======================================================================================
+@router.post("/{trid}")
+async def datasheet(
+        response: Response,
+        request: Request,
+        trid: int,
+        db: Annotated[Session, Depends(get_db)],
+        upload_file: UploadFile = File(),
+):
+    global path
+    print(trid)
+    # global path
+    try:
+        upload_file.filename = upload_file.filename.lower()
+
+        # path = f'public/media/{upload_file.filename}'
+        path = MEDIA_ROOT + '/' + upload_file.file
+        print(path)
+        query = select(TransistorOrm).where(TransistorOrm.id == trid)
+        result = db.execute(query)
+        transistor = result.scalars().one()
+        transistor.path_file = path
+        db.commit()
+        db.refresh(transistor)
+        with open(path, 'wb+') as buffer:
+            shutil.copyfileobj(upload_file.file, buffer)
+
+        return {
+            "response": response,
+            "trid": trid,
+            "request": request,
+            "file": upload_file,
+            "filename": path,
+            "type": upload_file.content_type,
+        }
+    except Exception as e:
+        print(e)
+        return {
+            "trid": trid,
+            # "request": request,
+            "file": upload_file,
+            "filename": path,
+            "type": upload_file.content_type,
+        }
 
 
 
@@ -306,3 +362,19 @@ async def delete_users(db: Annotated[Session, Depends(get_db)]):
     db.execute(delete(TransistorOrm))
     db.commit()
     return {'message': 'Delete All'}
+
+
+@router.get('/find/')
+async def find(
+        request: Request,
+        response: Response,
+        db: Annotated[Session, Depends(get_db)],
+        find = Form(),
+        userid = Cookie('user_id')
+):
+    if request.method == 'GET':
+        query = select(TransistorOrm).filter_by(userid == TransistorOrm.userid, TransistorOrm.name.__contains__(find))
+        result = db.execute(query)
+        transistors = result.scalars().all()
+        return templates.TemplateResponse("transistor.html",
+                                          {"request": request, "title": "Транзисторы", "transistors": transistors})

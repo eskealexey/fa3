@@ -4,7 +4,7 @@
  <h2>{{ title }}</h2>
 
 <section >
-    <form method="post" action="" enctype="multipart/form-data">
+    <form method="post" action="" enctype="text/plain">
        <p>
            <label for="name">Наименование:</label><br>
            <input type="text" name="name" id="name" maxlength="20" value="{{transistor.name}}">
@@ -45,7 +45,7 @@
 
        <p>
           <input type="hidden" name="user_id" id="user_id" value="{{user_id}}" >
-           <input type="text" name="trid" id="trid" value="{{transistor.id}}" >
+           <input type="hidden" name="trid" id="trid" value="{{transistor.id}}" >
        </p>
 
      <p>

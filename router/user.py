@@ -125,3 +125,10 @@ async def log_in(
     else:
         return {'message': 'Такого пользователя нет в базе'}
 
+
+@router.get('/logout')
+async def logout(request: Request):
+    response = templates.TemplateResponse("main.html", {"request": request, "title": "Главная"})
+    response.delete_cookie(key="user_id")
+    response.delete_cookie(key="user_name")
+    return response

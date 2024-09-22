@@ -3,7 +3,7 @@
 {% block content %}
 <div class="label"><h1>{{ title }}</h1></div>
 <div class="found">
-    <form action="#" method="get">
+    <form action="/transistors/find" method="get">
         <button type="submit">Поиск</button><input type="text" maxlength="20" name="find">
     </form>
 </div>
@@ -23,7 +23,7 @@
     {% for tr in transistors %}
     <tr>
         <td>
-            <a href="/transistors/{{tr.id}}?trid={{ tr.id }}/"> {{ tr.name }} </a>
+            <a href="/transistors/{{tr.id}}/"> {{ tr.name }} </a>
         </td>
         <td>
         {{ tr.markname }}

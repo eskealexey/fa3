@@ -12,11 +12,24 @@
 
 {% block left %}
     <aside class="left">
-        <span><i>Работает:</i> <b>{{user_name}}</b></span>
+<!--        <span><i>Работает:</i> <b>{{user_name}}</b></span>-->
 
 
-                 <p><a href="/users/registr">Регистрация</a></p>
+<!--                 <p><a href="/users/registr">Регистрация</a></p>-->
+<!--            <p><a href="/users/login"><button class="button">Вход</button></a></p>-->
+
+{% if request.cookies.get('user_id') %}
+<span><i>Работает:</i> <b>{{request.cookies.get('user_name')}}</b></span>
+   <p><a href="/users/logout"><button class="button">Выйти</button></a></p>
+
+{% else %}
+
+            <p><a href="/users/registr">Регистрация</a></p>
             <p><a href="/users/login"><button class="button">Вход</button></a></p>
+
+
+{% endif %}
+
 
 
     </aside>
