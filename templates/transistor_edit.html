@@ -4,7 +4,7 @@
  <h2>{{ title }}</h2>
 
 <section >
-    <form method="post" action="" enctype="text/plain">
+    <form method="post" action="/transistors/edit/{{transistor.id}}" enctype="text/plain">
        <p>
            <label for="name">Наименование:</label><br>
            <input type="text" name="name" id="name" maxlength="20" value="{{transistor.name}}">
@@ -40,11 +40,13 @@
        </p>
        <p>
            <label for="descr">Краткое описание:</label><br>
-           <textarea name="descr" id="descr" cols="50" rows="10">{{ transistor.discr }} </textarea>
+           <textarea name="descr" id="descr" cols="50" rows="10">{{ transistor.descr }} </textarea>
        </p>
 
        <p>
-          <input type="hidden" name="user_id" id="user_id" value="{{user_id}}" >
+           <input type="hidden" name="path_file" value="{{transistor.path_file}}">
+           <input type="hidden" name="amount" value="{{transistor.amount}}">
+          <input type="hidden" name="user_id" id="user_id" value="{{transistor.userid}}" >
            <input type="hidden" name="trid" id="trid" value="{{transistor.id}}" >
        </p>
 

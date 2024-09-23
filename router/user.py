@@ -7,8 +7,7 @@ from typing_extensions import Annotated
 
 from backend.db import get_db
 from models.transistor_mod import UserOrm
-# from app.main import templates
-# from app.main import templates
+
 from repository.user_repo import update_user_db
 from schemas import UpdateUser
 
