@@ -41,26 +41,27 @@
                 <p><input name="act" type="radio" value="add" > Добавить<br>
                 <input name="act" type="radio" value="del">Удалить</p>
 
-            </p>
+
             <p>
        <button type="submit">Выполнить</button>
      </p>
+
         </form>
 
-     <p>
-        <form method="post" action="" enctype="multipart/form-data">
-        <p>
-        <label for="path_file">Загрузить DataSheet:</label><br>
-        <input type="file" name="path_file" id="path_file">
-        <input type="hidden" name="trid" id="trid" value="{{transistor.id}}">
 
-    </p>
+        <form method="post" action="/transistirs/{{transistor.id}}" enctype="multipart/form-data">
+        <p>
+            <label for="path_file">Загрузить DataSheet:</label><br>
+            <input type="file" name="path_file" id="path_file">
+            <input type="hidden" name="trid" id="trid" value="{{transistor.id}}">
+        </p>
+
         <p>
             <button type="submit">Загрузить</button>
         </p>
         </form>
 
-     </p>
+
 
 
     </aside>

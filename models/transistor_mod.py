@@ -9,7 +9,7 @@ class TransistorOrm(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    markname = Column(String)
+    markname = Column(String, nullable=True)
     type_ = Column(Integer, ForeignKey('type_.id'))
     korpus = Column(Integer, ForeignKey('korpus.id'))
     descr = Column(String, nullable=True)
