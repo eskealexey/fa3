@@ -239,7 +239,7 @@ async def add_amount(
         else:
             error = 'удаляется больше чем есть'
 
-        if transistor == None:
+        if transistor is None:
             return JSONResponse(status_code=404, content={"message": "Пользователь не найден"})
 
         transistor.amount = total
@@ -268,16 +268,14 @@ async def datasheet(
 ):
     global path
     print(trid)
-    # global path
     try:
         upload_file.filename = upload_file.filename.lower()
-
-        # path = f'public/media/{upload_file.filename}'
+       # path = f'public/media/{upload_file.filename}'
         path = MEDIA_ROOT + '/' + upload_file.file
-        print(path)
+
         query = select(TransistorOrm).where(TransistorOrm.id == trid)
         result = db.execute(query)
-        transistor = result.scalars().one()
+        transistor = result.scalars().first()
         transistor.path_file = path
         db.commit()
         db.refresh(transistor)
@@ -348,7 +346,7 @@ async def add_korpus(db: Annotated[Session, Depends(get_db)], create_korpus: Cre
 
 
 @router.delete("/delete")
-async def delete_users(db: Annotated[Session, Depends(get_db)]):
+async def delete_all_transistors(db: Annotated[Session, Depends(get_db)]):
     db.execute(delete(TransistorOrm))
     db.commit()
     return {'message': 'Delete All'}

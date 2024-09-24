@@ -6,7 +6,7 @@ from typing_extensions import Annotated
 from fastapi.staticfiles import StaticFiles
 from router.transistor import router as trans_router
 from router.user import router as userrouter
-# from router.media import router as mediarouter
+
 
 app = FastAPI()
 
@@ -15,6 +15,7 @@ app = FastAPI()
 async def home(request: Request, user_name: Annotated[str, Cookie()] = None):
     print(user_name)
     return templates.TemplateResponse("main.html", {"request": request, "title": "Главная", "user_name": user_name})
+
 
 BASE_DIR = Path(__file__).resolve().parent
 MEDIA_URL = "/media/"
